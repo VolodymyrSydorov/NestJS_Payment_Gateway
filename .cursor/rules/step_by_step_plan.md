@@ -33,15 +33,46 @@ Building a full-stack payment gateway using NestJS backend + Angular frontend, i
 
 ## 🏗️ **Phase 2: Payment Gateway Architecture Implementation**
 
-### Step 2.1: Core Payment Module Structure
+### Step 2.1: Shared Interfaces Setup ✅
+- [x] Create shared interfaces directory (`shared/`)
+- [x] Set up shared DTOs, interfaces, and enums:
+  ```
+  shared/
+  ├── dto/                 # Shared Data Transfer Objects
+  │   ├── charge.dto.ts
+  │   └── payment-response.dto.ts
+  ├── interfaces/          # Shared TypeScript interfaces
+  │   ├── payment-processor.interface.ts
+  │   └── payment-processor-factory.interface.ts
+  ├── enums/               # Shared enums
+  │   ├── payment-status.enum.ts
+  │   ├── bank-id.enum.ts
+  │   └── currency.enum.ts
+  └── utils/               # Shared utilities
+      └── validation.utils.ts
+  ```
+- [x] Configure TypeScript path mapping in both FE and BE (`@shared/*`)
+
+### Step 2.2: Core Payment Module Structure
 - [ ] Create payment module in NestJS backend (`backend/src/payment/`)
-- [ ] Set up the directory structure according to implementation plan:
+- [ ] Set up the directory structure using shared interfaces and backend-only mocks:
   ```
   backend/src/payment/
-  ├── processors/          # Bank-specific processors
-  ├── dto/                 # Data Transfer Objects
-  ├── interfaces/          # TypeScript interfaces
+  ├── mocks/               # Mock services for simulating bank APIs
+  │   ├── stripe-mock.service.ts
+  │   ├── paypal-mock.service.ts
+  │   ├── square-mock.service.ts
+  │   ├── adyen-mock.service.ts
+  │   ├── braintree-mock.service.ts
+  │   └── mock.factory.ts
+  ├── processors/          # Bank-specific processors using mocks
+  │   ├── stripe.processor.ts
+  │   ├── paypal.processor.ts
+  │   ├── square.processor.ts
+  │   ├── adyen.processor.ts
+  │   └── braintree.processor.ts
   ├── factories/           # Processor factory
+  │   └── payment-processor.factory.ts
   ├── processing.service.ts
   ├── payment.controller.ts
   └── payment.module.ts
