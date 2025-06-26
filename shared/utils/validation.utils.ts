@@ -123,4 +123,13 @@ export class ValidationUtils {
   static toSmallestUnit(displayAmount: number): number {
     return Math.round(displayAmount * 100);
   }
+}
+
+/**
+ * Convenience function to validate payment request
+ * @param paymentRequest - The payment data to validate
+ * @returns Validation result with errors if any
+ */
+export function validatePaymentRequest(paymentRequest: PaymentRequest): ValidationResult {
+  return ValidationUtils.validatePaymentRequest(paymentRequest);
 } 

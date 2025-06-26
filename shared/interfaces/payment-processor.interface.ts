@@ -56,4 +56,10 @@ export interface PaymentProcessor {
    * @returns Human-readable name of the bank
    */
   getDisplayName(): string;
+
+  /**
+   * Get processor information and capabilities
+   * @returns Processor metadata and features
+   */
+  getProcessorInfo(): any;
 } 

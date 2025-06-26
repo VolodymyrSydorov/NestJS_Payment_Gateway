@@ -1,0 +1,14 @@
+{
+  "name": "@nestjs-payment-gateway/shared",
+  "version": "1.0.0",
+  "description": "Shared types and utilities for NestJS Payment Gateway",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+} 
