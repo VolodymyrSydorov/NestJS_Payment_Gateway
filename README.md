@@ -82,6 +82,7 @@ NestJS_Payment_Gateway/
 - ✅ 121/121 tests passing
 - ✅ CORS configuration for frontend integration
 - ✅ Health check endpoints
+- ✅ UUID-based transaction and reference ID generation
 
 ### Frontend (Production Ready - Phase 1 & 2 Complete)
 - ✅ Material Design payment form with validation
@@ -92,6 +93,7 @@ NestJS_Payment_Gateway/
 - ✅ Type-safe interfaces (no 'any' types)
 - ✅ Separated architecture (HTML/SCSS/TS files)
 - ✅ Memory leak prevention (takeUntilDestroyed)
+- ✅ UUID-based dynamic IDs for accessibility
 - ✅ Backend API integration with CORS
 
 ## 🔌 **API Integration**
@@ -130,12 +132,13 @@ curl -X POST http://localhost:3000/payments \
    payment-form.component.scss → Organized styles
    ```
 
-2. **✅ Removed Hardcoded Values**: Using enum constants with ngFor
+2. **✅ Removed Hardcoded Values**: Using enum constants with ngFor + UUID IDs
    ```typescript
-   // ✅ NOW: Dynamic options from enums
+   // ✅ NOW: Dynamic options from enums + unique IDs per component
    @for (currency of currencies; track currency.value) {
      <mat-option [value]="currency.value">{{ currency.label }}</mat-option>
    }
+   // Component IDs: payment-title-abc123, amount-input-abc123, etc.
    ```
 
 3. **✅ Fixed Template Functions**: All converted to computed signals

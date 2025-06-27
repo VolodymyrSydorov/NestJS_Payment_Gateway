@@ -235,11 +235,11 @@ export class BraintreeMockService {
   }
 
   private generateTransactionId(): string {
-    return `bt_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    return `bt_${Date.now()}_${uuidv4().substring(0, 13)}`;
   }
 
   private generatePaymentMethodId(): string {
-    return `pm_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+    return `pm_${Date.now()}_${uuidv4().substring(0, 8)}`;
   }
 
   private getRandomCardBrand(): string {

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PaymentRequest } from '@nestjs-payment-gateway/shared';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * PayPal SOAP Response Interface
@@ -176,25 +177,16 @@ export class PayPalMockService {
   }
 
   /**
-   * Generate random alphanumeric ID
+   * Generate random alphanumeric ID using UUID (for correlation IDs)
    */
   private generateRandomId(length: number): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
+    return uuidv4().replace(/-/g, '').substring(0, length).toUpperCase();
   }
 
   /**
-   * Generate random digits
+   * Generate random digits using UUID (for transaction IDs)
    */
   private generateRandomDigits(length: number): string {
-    let result = '';
-    for (let i = 0; i < length; i++) {
-      result += Math.floor(Math.random() * 10).toString();
-    }
-    return result;
+    return uuidv4().replace(/[^0-9]/g, '').substring(0, length).padEnd(length, '0');
   }
 } 

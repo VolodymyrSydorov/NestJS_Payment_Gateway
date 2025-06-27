@@ -256,22 +256,17 @@ export class SquareMockService {
   }
 
   /**
-   * Generate Square receipt number
+   * Generate Square receipt number using UUID
    */
   private generateReceiptNumber(): string {
-    return `SQ${Date.now()}${this.generateRandomDigits(4)}`;
+    return `SQ${Date.now()}${uuidv4().replace(/[^0-9]/g, '').substring(0, 4).padEnd(4, '0')}`;
   }
 
   /**
-   * Generate random alphanumeric ID
+   * Generate random alphanumeric ID using UUID
    */
   private generateRandomId(length: number): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
+    return uuidv4().replace(/-/g, '').substring(0, length);
   }
 
   /**

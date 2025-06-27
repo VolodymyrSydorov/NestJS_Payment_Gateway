@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { BankId, Currency, CURRENCY_SYMBOLS, PaymentResponse } from '@shared';
 import { PaymentService } from '../services/payment.service';
+import { v4 as uuidv4 } from 'uuid';
 
 interface ValidationErrors {
   amount?: string;
@@ -42,6 +43,19 @@ export class PaymentFormComponent {
   // Validation constants
   private readonly MIN_AMOUNT = 0.01;
   private readonly MAX_AMOUNT = 50000;
+
+  // Unique IDs for accessibility (generated once per component instance)
+  private readonly componentId = uuidv4().substring(0, 8);
+  readonly ids = {
+    paymentTitle: `payment-title-${this.componentId}`,
+    amountInput: `amount-input-${this.componentId}`,
+    amountError: `amount-error-${this.componentId}`,
+    currencySelect: `currency-select-${this.componentId}`,
+    currencyError: `currency-error-${this.componentId}`,
+    bankSelect: `bank-select-${this.componentId}`,
+    bankError: `bank-error-${this.componentId}`,
+    resultTitle: `result-title-${this.componentId}`
+  };
 
   // Expose enums to template
   readonly BankId = BankId;

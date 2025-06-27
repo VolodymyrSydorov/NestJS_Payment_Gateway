@@ -310,34 +310,29 @@ export class AdyenMockService {
    */
   private generatePspReference(): string {
     const timestamp = Date.now().toString();
-    const random = Math.floor(Math.random() * 999999).toString().padStart(6, '0');
+    const random = uuidv4().replace(/[^0-9]/g, '').substring(0, 6).padEnd(6, '0');
     return `${timestamp}${random}`;
   }
 
   /**
-   * Generate authorization code
+   * Generate authorization code using UUID
    */
   private generateAuthCode(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < 6; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
+    return uuidv4().replace(/-/g, '').substring(0, 6).toUpperCase();
   }
 
   /**
-   * Generate acquirer reference
+   * Generate acquirer reference using UUID
    */
   private generateAcquirerReference(): string {
-    return `ACQ${Date.now()}${Math.floor(Math.random() * 9999)}`;
+    return `ACQ${Date.now()}${uuidv4().replace(/[^0-9]/g, '').substring(0, 4).padEnd(4, '0')}`;
   }
 
   /**
-   * Generate merchant reference
+   * Generate merchant reference using UUID
    */
   private generateMerchantReference(): string {
-    return `ORDER_${Date.now()}_${Math.floor(Math.random() * 9999)}`;
+    return `ORDER_${Date.now()}_${uuidv4().replace(/[^0-9]/g, '').substring(0, 4).padEnd(4, '0')}`;
   }
 
   /**

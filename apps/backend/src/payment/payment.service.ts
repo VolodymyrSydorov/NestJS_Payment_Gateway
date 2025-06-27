@@ -1,6 +1,7 @@
 import { Injectable, Logger, BadRequestException, ServiceUnavailableException } from '@nestjs/common';
 import { PaymentRequest, PaymentResponse, PaymentStatus, BankId, validatePaymentRequest } from '@nestjs-payment-gateway/shared';
 import { PaymentProcessorFactoryImpl } from './factories/payment-processor.factory';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Payment Service
@@ -61,7 +62,7 @@ export class PaymentService {
 
       // Return a standardized error response
       return {
-        transactionId: `failed_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+        transactionId: `failed_${Date.now()}_${uuidv4().substring(0, 8)}`,
         status: PaymentStatus.FAILED,
         amount: paymentRequest.amount,
         currency: paymentRequest.currency,
