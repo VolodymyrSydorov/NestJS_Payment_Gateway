@@ -45,13 +45,30 @@ coverage/
 # TypeScript cache
 *.tsbuildinfo
 
-# Angular specific
-frontend/.angular/
-frontend/e2e/
+# Angular specific (Frontend)
+.angular/
+apps/frontend/.angular/
+e2e/
+apps/frontend/e2e/
 
-# NestJS specific
-backend/.nyc_output
+# NestJS specific (Backend)
+.nyc_output
+apps/backend/.nyc_output
 
 # Temporary folders
 tmp/
-temp/ 
+temp/
+
+# Additional frontend patterns
+apps/frontend/dist/
+apps/frontend/tmp/
+apps/frontend/out-tsc/
+apps/frontend/bazel-out/
+
+# Additional backend patterns
+apps/backend/dist/
+apps/backend/tmp/
+
+# Test results
+junit.xml
+test-results.xml 

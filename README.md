@@ -1,12 +1,10 @@
 # NestJS Payment Gateway
 
-A simplified payment gateway implementation that connects 5 different banks with different API formats, as required by the Russian coding task.
+A simplified payment gateway implementation that connects 5 different banks with different API formats.
 
-## Russian Task Requirements ✅
+## Task Requirements ✅
 
-> Реализуйте платёжный шлюз, подключающий 5 разных банков, каждый из которых имеет свой формат API, структуру запроса и ответа. Требуется реализовать ProcessingService с единым публичным методом charge. описать типы и форматы ответов. (NestJs)
-
-**Translation:** Implement a payment gateway connecting 5 different banks with different API formats. Need ProcessingService with single public method "charge" and describe types/response formats.
+> Implement a payment gateway connecting 5 different banks, each with different API formats. Need ProcessingService with single public method "charge" and describe types/response formats.
 
 ## Implementation Overview
 

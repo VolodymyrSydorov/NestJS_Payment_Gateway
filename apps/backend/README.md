@@ -2,9 +2,9 @@
 
 Backend implementation of the payment gateway with ProcessingService that handles 5 different bank processors with unique API formats.
 
-## Russian Task Implementation ✅
+## Task Implementation ✅
 
-This backend implements the exact requirements from the Russian coding task:
+This backend implements the requirements:
 - **ProcessingService** with single public method `charge()`
 - **5 Different Banks** with unique API formats
 - **Complete Type Definitions** for all requests/responses
