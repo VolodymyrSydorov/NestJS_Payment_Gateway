@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PaymentController } from '../payment.controller';
 import { PaymentService } from '../payment.service';
 import { PaymentProcessorFactoryImpl } from '../factories/payment-processor.factory';
-import { PaymentRequest, PaymentStatus, Currency, BankId } from '@nestjs-payment-gateway/shared';
+import { PaymentRequest, PaymentStatus, Currency, BankId, ErrorCode } from '@nestjs-payment-gateway/shared';
 
 // Import processors and their mocks
 import { StripeProcessor } from '../processors/stripe.processor';
@@ -95,7 +95,7 @@ describe('PaymentController', () => {
       const result = await controller.processPayment(invalidPayment);
 
       expect(result.status).toBe(PaymentStatus.FAILED);
-      expect(result.errorCode).toBe('INVALID_REQUEST');
+      expect(result.errorCode).toBe(ErrorCode.INVALID_REQUEST);
       expect(result.errorMessage).toBeDefined();
     });
   });
@@ -133,8 +133,8 @@ describe('PaymentController', () => {
       // Check structure of first method
       expect(response.data[0]).toHaveProperty('bankId');
       expect(response.data[0]).toHaveProperty('name');
-      expect(response.data[0]).toHaveProperty('displayName');
       expect(response.data[0]).toHaveProperty('enabled');
+      expect(response.data[0]).toHaveProperty('averageProcessingTime');
       expect(response.data[0].enabled).toBe(true);
     });
   });
@@ -164,12 +164,11 @@ describe('PaymentController', () => {
       expect(response.data).toBeDefined();
       expect(response.data.totalProcessors).toBe(5);
       expect(response.data.enabledProcessors).toBeGreaterThanOrEqual(0);
-      expect(response.data.disabledProcessors).toBeGreaterThanOrEqual(0);
-      expect(response.data.protocolBreakdown).toBeDefined();
       expect(response.data.averageResponseTime).toBeGreaterThan(0);
-      expect(response.data.supportedCurrencies).toBeDefined();
-      expect(response.data.supportedFeatures).toBeDefined();
-      expect(response.data.supportedCurrencies).toContain('USD');
+      // Simplified stats only have these 3 properties
+      expect(response.data).toHaveProperty('totalProcessors');
+      expect(response.data).toHaveProperty('enabledProcessors');
+      expect(response.data).toHaveProperty('averageResponseTime');
     });
   });
 
@@ -255,7 +254,7 @@ describe('PaymentController', () => {
       const result = await controller.processPayment(invalidBankPayment);
 
       expect(result.status).toBe(PaymentStatus.FAILED);
-      expect(result.errorCode).toBe('INVALID_REQUEST');
+      expect(result.errorCode).toBe(ErrorCode.INVALID_REQUEST);
       expect(result.errorMessage).toContain('Unsupported bank');
     });
 
@@ -270,7 +269,7 @@ describe('PaymentController', () => {
       const result = await controller.processPayment(zeroAmountPayment);
 
       expect(result.status).toBe(PaymentStatus.FAILED);
-      expect(result.errorCode).toBe('INVALID_REQUEST');
+      expect(result.errorCode).toBe(ErrorCode.INVALID_REQUEST);
     });
   });
 

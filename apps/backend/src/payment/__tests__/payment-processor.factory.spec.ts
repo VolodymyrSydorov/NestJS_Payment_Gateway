@@ -105,7 +105,7 @@ describe('PaymentProcessorFactoryImpl', () => {
     it('should throw error for unsupported bank', () => {
       expect(() => {
         factory.createProcessor('INVALID_BANK' as BankId);
-      }).toThrow('No processor found for bank: INVALID_BANK');
+      }).toThrow('Unsupported bank: INVALID_BANK');
     });
   });
 
@@ -147,13 +147,13 @@ describe('PaymentProcessorFactoryImpl', () => {
     it('should throw error when enabling invalid bank', () => {
       expect(() => {
         factory.enableProcessor('INVALID_BANK' as BankId);
-      }).toThrow('Processor not found for bank: INVALID_BANK');
+      }).toThrow('Processor not found: INVALID_BANK');
     });
 
     it('should throw error when disabling invalid bank', () => {
       expect(() => {
         factory.disableProcessor('INVALID_BANK' as BankId);
-      }).toThrow('Processor not found for bank: INVALID_BANK');
+      }).toThrow('Processor not found: INVALID_BANK');
     });
 
     it('should refuse to create processor when disabled', () => {
@@ -162,7 +162,7 @@ describe('PaymentProcessorFactoryImpl', () => {
 
       expect(() => {
         factory.createProcessor(BankId.STRIPE);
-      }).toThrow('Processor for bank stripe is currently disabled');
+      }).toThrow('Bank stripe is currently disabled');
 
       // Re-enable for cleanup
       factory.enableProcessor(BankId.STRIPE);
@@ -176,11 +176,14 @@ describe('PaymentProcessorFactoryImpl', () => {
       expect(summary).toHaveLength(5);
       expect(summary[0]).toHaveProperty('bankId');
       expect(summary[0]).toHaveProperty('name');
-      expect(summary[0]).toHaveProperty('displayName');
       expect(summary[0]).toHaveProperty('enabled');
-      expect(summary[0]).toHaveProperty('apiType');
-      expect(summary[0]).toHaveProperty('features');
       expect(summary[0]).toHaveProperty('averageProcessingTime');
+      
+      // Verify using BankId enum
+      const stripeProcessor = summary.find(p => p.bankId === BankId.STRIPE);
+      expect(stripeProcessor).toBeDefined();
+      expect(stripeProcessor!.name).toBe('Stripe');
+      expect(stripeProcessor!.enabled).toBe(true);
     });
 
     it('should get enabled processors only', () => {
@@ -190,7 +193,7 @@ describe('PaymentProcessorFactoryImpl', () => {
       const enabledProcessors = factory.getEnabledProcessors();
       expect(enabledProcessors).toHaveLength(4);
       
-      const enabledBankIds = factory.getEnabledBankIds();
+      const enabledBankIds = enabledProcessors.map(p => p.bankId);
       expect(enabledBankIds).toHaveLength(4);
       expect(enabledBankIds).not.toContain(BankId.STRIPE);
       

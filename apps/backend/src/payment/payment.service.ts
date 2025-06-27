@@ -1,19 +1,12 @@
 import { Injectable, Logger, BadRequestException, ServiceUnavailableException } from '@nestjs/common';
-import { PaymentRequest, PaymentResponse, PaymentStatus, BankId, Currency, validatePaymentRequest } from '@nestjs-payment-gateway/shared';
+import { PaymentRequest, PaymentResponse, PaymentStatus, BankId, ErrorCode, HealthStatus } from '@nestjs-payment-gateway/shared';
 import { PaymentProcessorFactoryImpl } from './factories/payment-processor.factory';
 import { v4 as uuidv4 } from 'uuid';
-import { ProcessorInfo, ProcessorError } from '../interfaces/processor-types';
 
 /**
- * Payment Service
- * Main orchestrator for payment processing across all bank processors
- * 
- * Key Features:
- * - Unified payment processing API
- * - Dynamic processor selection
- * - Request validation
- * - Error handling and logging
- * - Processing metrics and monitoring
+ * Processing Service
+ * Task: Unified charge method for 5 different banks with different API formats
+ * Implements the main requirement: single public method 'charge'
  */
 @Injectable()
 export class PaymentService {
@@ -22,46 +15,33 @@ export class PaymentService {
   constructor(
     private readonly processorFactory: PaymentProcessorFactoryImpl,
   ) {
-    this.logger.log('Payment Service initialized');
+    this.logger.log('Processing Service initialized with 5 bank processors');
   }
 
   /**
-   * Process a payment request using the specified bank processor
+   * MAIN TASK METHOD: Unified charge method
+   * Handles 5 different banks with different request/response formats
    */
   async processPayment(paymentRequest: PaymentRequest): Promise<PaymentResponse> {
-    const startTime = Date.now();
-    
-    this.logger.log(`Processing payment: Amount ${paymentRequest.amount} ${paymentRequest.currency} via ${paymentRequest.bankId}`);
+    this.logger.log(`Processing payment: ${paymentRequest.amount} ${paymentRequest.currency} via ${paymentRequest.bankId}`);
     
     try {
-      // Validate the payment request
+      // Basic validation
       this.validatePaymentRequest(paymentRequest);
 
-      // Get the appropriate processor
+      // Get processor for specific bank (core task: handle different API formats)
       const processor = this.processorFactory.createProcessor(paymentRequest.bankId);
 
-      // Verify processor can handle this payment
-      if (!processor.canProcess(paymentRequest)) {
-        throw new BadRequestException(`Processor ${paymentRequest.bankId} cannot process this payment request`);
-      }
-
-      // Process the payment
+      // Process payment with bank-specific format
       const result = await processor.charge(paymentRequest);
 
-      // Log the result
-      const processingTime = Date.now() - startTime;
-      this.logger.log(
-        `Payment ${result.status === PaymentStatus.SUCCESS ? 'successful' : 'failed'}: ` +
-        `${result.transactionId} (${processingTime}ms total, ${result.processingTimeMs}ms processor)`
-      );
-
+      this.logger.log(`Payment ${result.status}: ${result.transactionId}`);
       return result;
 
     } catch (error) {
-      const processingTime = Date.now() - startTime;
-      this.logger.error(`Payment processing failed after ${processingTime}ms: ${error.message}`);
+      this.logger.error(`Payment failed: ${error.message}`);
 
-      // Return a standardized error response
+      // Return standardized error response
       return {
         transactionId: `failed_${Date.now()}_${uuidv4().substring(0, 8)}`,
         status: PaymentStatus.FAILED,
@@ -69,255 +49,176 @@ export class PaymentService {
         currency: paymentRequest.currency,
         bankId: paymentRequest.bankId,
         timestamp: new Date(),
-        referenceId: paymentRequest.referenceId,
-        processingTimeMs: processingTime,
+        processingTimeMs: 0,
         errorMessage: error.message || 'Payment processing failed',
         errorCode: this.getErrorCode(error)
       };
     }
   }
 
+  // ===== MINIMAL METHODS FOR FRONTEND COMPATIBILITY =====
+
   /**
-   * Process payment with automatic bank selection (chooses best available processor)
+   * Auto processor selection (frontend feature)
    */
   async processPaymentAuto(paymentRequest: Omit<PaymentRequest, 'bankId'>): Promise<PaymentResponse> {
-    this.logger.log(`Processing payment with auto bank selection: Amount ${paymentRequest.amount} ${paymentRequest.currency}`);
-
     try {
-      // Get the best available processor
       const processor = this.processorFactory.getBestProcessor();
-      
-      // Create full payment request with selected bank
-      const fullPaymentRequest: PaymentRequest = {
-        ...paymentRequest,
-        bankId: processor.bankId
-      };
-
-      this.logger.log(`Auto-selected processor: ${processor.getDisplayName()}`);
-
-      return await this.processPayment(fullPaymentRequest);
-
+      const fullRequest: PaymentRequest = { ...paymentRequest, bankId: processor.bankId };
+      return this.processPayment(fullRequest);
     } catch (error) {
-      this.logger.error(`Auto payment processing failed: ${error.message}`);
+      this.logger.error(`Auto payment failed: ${error.message}`);
       throw new ServiceUnavailableException('No available payment processors');
     }
   }
 
   /**
-   * Get all available payment methods (enabled processors)
+   * Get available payment methods (frontend needs this)
    */
   getAvailablePaymentMethods(): Array<{
     bankId: BankId;
     name: string;
-    displayName: string;
-    apiType: string;
-    features: string[];
-    averageProcessingTime: number;
     enabled: boolean;
+    averageProcessingTime: number;
   }> {
     return this.processorFactory.getProcessorsSummary()
       .filter(processor => processor.enabled);
   }
 
   /**
-   * Get payment gateway health status
+   * Simple health check (frontend needs this)
    */
   getHealthStatus(): {
-    status: 'healthy' | 'degraded' | 'unhealthy';
+    status: HealthStatus;
     totalProcessors: number;
     healthyProcessors: number;
-    timestamp: Date;
-    processors: Array<{
-      bankId: BankId;
-      name: string;
-      status: 'healthy' | 'disabled' | 'error';
-      responseTime?: number;
-    }>;
+    processors: Array<{ bankId: BankId; name: string; status: string; }>;
   } {
-    const allProcessors = this.processorFactory.getAllProcessors();
-    const enabledProcessors = this.processorFactory.getEnabledProcessors();
-    const processorStatuses = this.processorFactory.getProcessorsHealthStatus();
+    const statuses = this.processorFactory.getProcessorsHealthStatus();
+    const healthyCount = statuses.filter(p => p.status === HealthStatus.HEALTHY).length;
+    const totalCount = statuses.length;
 
-    const healthyCount = processorStatuses.filter(p => p.status === 'healthy').length;
-    const totalCount = allProcessors.length;
-
-    let overallStatus: 'healthy' | 'degraded' | 'unhealthy';
+    let overallStatus: HealthStatus;
     if (healthyCount === 0) {
-      overallStatus = 'unhealthy';
+      overallStatus = HealthStatus.UNHEALTHY;
     } else if (healthyCount < totalCount) {
-      overallStatus = 'degraded';
+      overallStatus = HealthStatus.DEGRADED;  
     } else {
-      overallStatus = 'healthy';
+      overallStatus = HealthStatus.HEALTHY;
     }
 
     return {
       status: overallStatus,
       totalProcessors: totalCount,
       healthyProcessors: healthyCount,
-      timestamp: new Date(),
-      processors: processorStatuses
+      processors: statuses
     };
   }
 
   /**
-   * Get payment processing statistics
+   * Basic statistics (frontend needs this)
    */
   getStatistics(): {
     totalProcessors: number;
     enabledProcessors: number;
-    disabledProcessors: number;
-    protocolBreakdown: Record<string, number>;
     averageResponseTime: number;
-    supportedCurrencies: string[];
-    supportedFeatures: string[];
   } {
-    const stats = this.processorFactory.getProcessorStatistics();
-    const allProcessors = this.processorFactory.getAllProcessors();
-
-    // Collect all supported currencies and features
-    const supportedCurrencies = new Set<string>();
-    const supportedFeatures = new Set<string>();
-
-    allProcessors.forEach(processor => {
-      const info = processor.getProcessorInfo();
-      
-      // Add currencies
-      if (info.supported_currencies) {
-        info.supported_currencies.forEach((currency: string) => supportedCurrencies.add(currency));
-      }
-      
-      // Add features
-      if (info.features) {
-        info.features.forEach((feature: string) => supportedFeatures.add(feature));
-      }
-    });
-
-    return {
-      ...stats,
-      supportedCurrencies: Array.from(supportedCurrencies).sort(),
-      supportedFeatures: Array.from(supportedFeatures).sort()
-    };
+    return this.processorFactory.getProcessorStatistics();
   }
 
   /**
-   * Enable a specific payment processor
+   * Enable/disable processors (admin functionality)
    */
   enableProcessor(bankId: BankId): void {
-    this.logger.log(`Enabling processor: ${bankId}`);
     this.processorFactory.enableProcessor(bankId);
+    this.logger.log(`Enabled processor: ${bankId}`);
   }
 
-  /**
-   * Disable a specific payment processor
-   */
   disableProcessor(bankId: BankId): void {
-    this.logger.log(`Disabling processor: ${bankId}`);
     this.processorFactory.disableProcessor(bankId);
+    this.logger.log(`Disabled processor: ${bankId}`);
   }
 
   /**
-   * Check if a specific bank is supported and enabled
+   * Check if bank is available (frontend validation)
    */
   isBankAvailable(bankId: BankId): boolean {
     return this.processorFactory.isBankEnabled(bankId);
   }
 
   /**
-   * Get processor information for a specific bank
+   * Get processor info (frontend needs this)
    */
-  getProcessorInfo(bankId: BankId): ProcessorInfo {
+  getProcessorInfo(bankId: BankId): any {
     const processor = this.processorFactory.createProcessor(bankId);
     return processor.getProcessorInfo();
   }
 
+  // ===== SIMPLE HELPERS =====
+
   /**
-   * Validate payment request
+   * Basic request validation
    */
   private validatePaymentRequest(paymentRequest: PaymentRequest): void {
-    // Check if bank is supported FIRST (before other validation)
+    if (!paymentRequest.amount || paymentRequest.amount <= 0) {
+      throw new BadRequestException('Invalid amount');
+    }
+
+    if (!paymentRequest.currency) {
+      throw new BadRequestException('Currency is required');
+    }
+
+    if (!paymentRequest.bankId) {
+      throw new BadRequestException('Bank ID is required');
+    }
+
     if (!this.processorFactory.isBankSupported(paymentRequest.bankId)) {
-      const availableBanks = this.processorFactory.getAvailableBankIds().join(', ');
-      throw new BadRequestException(
-        `Unsupported bank: ${paymentRequest.bankId}. Available banks: ${availableBanks}`
-      );
+      const available = this.processorFactory.getAvailableBankIds().join(', ');
+      throw new BadRequestException(`Unsupported bank: ${paymentRequest.bankId}. Available: ${available}`);
     }
 
-    // Use shared validation utility
-    const validationResult = validatePaymentRequest(paymentRequest);
-    
-    if (!validationResult.isValid) {
-      const errorMessage = `Invalid payment request: ${validationResult.errors.join(', ')}`;
-      this.logger.warn(errorMessage);
-      throw new BadRequestException(errorMessage);
-    }
-
-    // Check if bank is enabled
     if (!this.processorFactory.isBankEnabled(paymentRequest.bankId)) {
-      throw new ServiceUnavailableException(
-        `Payment processor for ${paymentRequest.bankId} is currently unavailable`
-      );
+      throw new BadRequestException(`Bank ${paymentRequest.bankId} is currently disabled`);
     }
   }
 
   /**
-   * Get error code from exception
+   * Simple connectivity test (for health checks)
    */
-  private getErrorCode(error: any): string {
-    if (error instanceof BadRequestException) {
-      return 'INVALID_REQUEST';
-    }
-    if (error instanceof ServiceUnavailableException) {
-      return 'SERVICE_UNAVAILABLE';
-    }
-    return 'PROCESSING_ERROR';
-  }
-
-  /**
-   * Test connectivity to all enabled processors
-   */
-  async testConnectivity(): Promise<Record<BankId, { success: boolean; responseTime?: number; error?: string }>> {
-    const results: Record<string, { success: boolean; responseTime?: number; error?: string }> = {};
+  async testConnectivity(): Promise<Record<BankId, { success: boolean; responseTime?: number }>> {
     const enabledProcessors = this.processorFactory.getEnabledProcessors();
-
-    this.logger.log(`Testing connectivity to ${enabledProcessors.length} enabled processors`);
+    const results: Record<string, any> = {};
 
     for (const processor of enabledProcessors) {
       const startTime = Date.now();
-      
       try {
-        // Create a minimal test payment request
-        const testPayment: PaymentRequest = {
-          amount: 100, // $1.00
-          currency: Currency.USD,
-          bankId: processor.bankId,
-          description: 'Connectivity test',
-          referenceId: `test_${Date.now()}`
-        };
-
-        // This would be a real connectivity test in production
-        // For now, we'll just check if the processor is responsive
-        const info = processor.getProcessorInfo();
-        const responseTime = Date.now() - startTime;
-
+        // Simple test - just check if processor is responsive
+        processor.getProcessorInfo();
         results[processor.bankId] = {
           success: true,
-          responseTime
+          responseTime: Date.now() - startTime
         };
-
-        this.logger.debug(`Connectivity test passed for ${processor.getDisplayName()}: ${responseTime}ms`);
-
       } catch (error) {
-        const responseTime = Date.now() - startTime;
         results[processor.bankId] = {
           success: false,
-          responseTime,
-          error: error.message
+          responseTime: Date.now() - startTime
         };
-
-        this.logger.warn(`Connectivity test failed for ${processor.getDisplayName()}: ${error.message}`);
       }
     }
 
-    return results as Record<BankId, { success: boolean; responseTime?: number; error?: string }>;
+    return results;
+  }
+
+  /**
+   * Get error code from exception (needed for tests)
+   */
+  private getErrorCode(error: any): ErrorCode {
+    if (error instanceof BadRequestException) {
+      return ErrorCode.INVALID_REQUEST;
+    }
+    if (error instanceof ServiceUnavailableException) {
+      return ErrorCode.SERVICE_UNAVAILABLE;
+    }
+    return ErrorCode.PROCESSING_ERROR;
   }
 } 

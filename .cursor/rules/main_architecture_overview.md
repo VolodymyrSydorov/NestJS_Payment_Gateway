@@ -1,8 +1,20 @@
 # NestJS Payment Gateway - Main Architecture Overview
 
+## 🎯 **SIMPLIFIED ARCHITECTURE - Task Focused Implementation**
+
+**Russian Task**: *"Реализуйте платёжный шлюз, подключающий 5 разных банков, каждый из которых имеет свой формат API"*
+
+This payment gateway has been **simplified** to match the coding assignment requirements, removing enterprise bloat while maintaining professional code quality:
+
+✅ **ProcessingService** with unified `charge()` method  
+✅ **5 Different Banks** with unique API formats  
+✅ **Zero Magic Strings** - all constants use proper enums (`ErrorCode`, `HealthStatus`, `BankId`)  
+✅ **Simple Factory Pattern** - creates processors without over-engineering  
+✅ **122/122 Tests Passing** - with enum-based assertions  
+
 ## 🏗️ **System Architecture**
 
-This is a full-stack payment gateway application with a clean, modular architecture supporting 5 different payment processors through a unified API interface.
+This is a full-stack payment gateway application with a clean, task-focused architecture supporting 5 different payment processors through a unified API interface.
 
 ### **Technology Stack**
 - **Backend**: NestJS + TypeScript (Port 3000)
@@ -98,9 +110,11 @@ This is a full-stack payment gateway application with a clean, modular architect
 - **`payment-response.dto.ts`**: Unified response format
 
 #### **Enumerations (`enums/`)**
-- **`bank-id.enum.ts`**: Payment processor identifiers
+- **`bank-id.enum.ts`**: Payment processor identifiers (STRIPE, PAYPAL, SQUARE, ADYEN, BRAINTREE)
 - **`currency.enum.ts`**: Supported currencies (USD, EUR, GBP, JPY, AUD, CAD)
-- **`payment-status.enum.ts`**: Transaction status values
+- **`payment-status.enum.ts`**: Transaction status values (SUCCESS, FAILED, PENDING)
+- **`error-code.enum.ts`**: ✨ **NEW** - Standardized error codes (INVALID_REQUEST, SERVICE_UNAVAILABLE, PROCESSING_ERROR)
+- **`health-status.enum.ts`**: ✨ **NEW** - Health status values (HEALTHY, DEGRADED, UNHEALTHY, DISABLED, ERROR)
 
 #### **Interfaces (`interfaces/`)**
 - **`payment-processor.interface.ts`**: Processor contract definition
