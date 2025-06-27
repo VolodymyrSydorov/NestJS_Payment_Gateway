@@ -9,8 +9,14 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { BankId, Currency, CURRENCY_SYMBOLS } from '@shared';
+import { BankId, Currency, CURRENCY_SYMBOLS, PaymentResponse } from '@shared';
 import { PaymentService } from '../services/payment.service';
+
+interface ValidationErrors {
+  amount?: string;
+  currency?: string;
+  selectedBank?: string;
+}
 
 @Component({
   selector: 'app-payment-form',
@@ -32,6 +38,10 @@ export class PaymentFormComponent {
   private paymentService = inject(PaymentService);
   private snackBar = inject(MatSnackBar);
   private takeUntilDestroyed = takeUntilDestroyed();
+
+  // Validation constants
+  private readonly MIN_AMOUNT = 0.01;
+  private readonly MAX_AMOUNT = 50000;
 
   // Expose enums to template
   readonly BankId = BankId;
@@ -61,14 +71,49 @@ export class PaymentFormComponent {
   });
   
   isLoading = signal<boolean>(false);
-  paymentResult = signal<any>(null);
+  paymentResult = signal<PaymentResponse | null>(null);
   
-  // Computed signals (no template function calls!)
-  isFormValid = computed(() => {
+  // Form validation with computed signals
+  formErrors = computed<ValidationErrors>(() => {
     const formData = this.formData();
-    return formData.amount > 0 && formData.selectedBank !== null;
+    const errors: ValidationErrors = {};
+
+    // Amount validation
+    if (!formData.amount || formData.amount <= 0) {
+      errors.amount = 'Amount is required and must be positive';
+    } else if (formData.amount < this.MIN_AMOUNT) {
+      errors.amount = `Minimum amount is ${this.getCurrencySymbol(formData.currency)}${this.MIN_AMOUNT}`;
+    } else if (formData.amount > this.MAX_AMOUNT) {
+      errors.amount = `Maximum amount is ${this.getCurrencySymbol(formData.currency)}${this.MAX_AMOUNT.toLocaleString()}`;
+    }
+
+    // Currency validation
+    if (!formData.currency) {
+      errors.currency = 'Please select a currency';
+    }
+
+    // Payment processor validation
+    if (!formData.selectedBank) {
+      errors.selectedBank = 'Please select a payment processor';
+    }
+
+    return errors;
   });
 
+  // Check if form has critical errors (prevent submission)
+  hasCriticalErrors = computed(() => {
+    const formData = this.formData();
+    // Only prevent submission for truly critical issues
+    return !formData.currency || !formData.selectedBank || formData.amount <= 0;
+  });
+
+  // Check if form is valid (for validation display)
+  isFormValid = computed(() => {
+    const errors = this.formErrors();
+    return Object.keys(errors).length === 0;
+  });
+
+  // Display formatted amount
   amountDisplay = computed(() => {
     const formData = this.formData();
     return `${this.getCurrencySymbol(formData.currency)}${formData.amount} ${formData.currency}`;
@@ -80,8 +125,9 @@ export class PaymentFormComponent {
   }
 
   // Signal update methods
-  updateAmount(amount: number) {
-    this.formData.update(formData => ({ ...formData, amount }));
+  updateAmount(amount: number | string) {
+    const numericAmount = typeof amount === 'string' ? parseFloat(amount) || 0 : amount;
+    this.formData.update(formData => ({ ...formData, amount: numericAmount }));
   }
 
   updateCurrency(currency: Currency) {
@@ -91,16 +137,35 @@ export class PaymentFormComponent {
   updateBank(selectedBank: BankId) {
     this.formData.update(formData => ({ ...formData, selectedBank }));
   }
+
+  // Get specific error message for API errors
+  private getErrorMessage(error: any): string {
+    if (error.error?.message) {
+      return error.error.message;
+    }
+    
+    if (error.status === 400) {
+      return 'Invalid payment data. Please check your input.';
+    } else if (error.status === 402) {
+      return 'Payment declined. Please try a different payment method.';
+    } else if (error.status === 500) {
+      return 'Payment processor temporarily unavailable. Please try again.';
+    } else if (error.status === 0) {
+      return 'Unable to connect to payment service. Check your internet connection.';
+    }
+    
+    return 'Payment failed. Please try again.';
+  }
   
   onSubmit() {
-    if (!this.isFormValid() || this.isLoading()) return;
+    if (this.hasCriticalErrors() || this.isLoading()) return;
 
     this.isLoading.set(true);
     this.paymentResult.set(null);
 
     const formData = this.formData();
     const paymentRequest = {
-      amount: formData.amount * 100,
+      amount: formData.amount * 100, // Convert to cents
       currency: formData.currency,
       bankId: formData.selectedBank
     };
@@ -110,15 +175,16 @@ export class PaymentFormComponent {
       .subscribe({
         next: (response) => {
           this.isLoading.set(false);
-          this.paymentResult.set(response);
+          this.paymentResult.set(response as PaymentResponse);
           this.snackBar.open('Payment processed successfully!', 'Close', {
             duration: 3000
           });
         },
         error: (error) => {
           this.isLoading.set(false);
+          const errorMessage = this.getErrorMessage(error);
           console.error('Payment error:', error);
-          this.snackBar.open('Payment failed. Please try again.', 'Close', {
+          this.snackBar.open(errorMessage, 'Close', {
             duration: 5000
           });
         }

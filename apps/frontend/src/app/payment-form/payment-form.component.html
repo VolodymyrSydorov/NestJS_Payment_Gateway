@@ -20,30 +20,44 @@
           [disabled]="isLoading()">
         <span matTextPrefix>{{ getCurrencySymbol(formData().currency) }}&nbsp;</span>
       </mat-form-field>
+      
+      @if (formErrors().amount) {
+        <div class="error-message">{{ formErrors().amount }}</div>
+      }
 
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Currency</mat-label>
         <mat-select [ngModel]="formData().currency" (ngModelChange)="updateCurrency($event)" name="currency" [disabled]="isLoading()">
-          <mat-option *ngFor="let currency of currencies" [value]="currency.value">
-            {{ currency.label }}
-          </mat-option>
+          @for (currency of currencies; track currency.value) {
+            <mat-option [value]="currency.value">
+              {{ currency.label }}
+            </mat-option>
+          }
         </mat-select>
+        @if (formErrors().currency) {
+          <mat-error>{{ formErrors().currency }}</mat-error>
+        }
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Payment Processor</mat-label>
         <mat-select [ngModel]="formData().selectedBank" (ngModelChange)="updateBank($event)" name="bank" [disabled]="isLoading()">
-          <mat-option *ngFor="let processor of paymentProcessors" [value]="processor.value">
-            {{ processor.label }}
-          </mat-option>
+          @for (processor of paymentProcessors; track processor.value) {
+            <mat-option [value]="processor.value">
+              {{ processor.label }}
+            </mat-option>
+          }
         </mat-select>
+        @if (formErrors().selectedBank) {
+          <mat-error>{{ formErrors().selectedBank }}</mat-error>
+        }
       </mat-form-field>
 
       <button 
         mat-raised-button 
         color="primary" 
         class="submit-button"
-        [disabled]="!isFormValid() || isLoading()"
+        [disabled]="hasCriticalErrors() || isLoading()"
         (click)="onSubmit()">
         @if (isLoading()) {
           <mat-spinner diameter="20" color="accent"></mat-spinner>
