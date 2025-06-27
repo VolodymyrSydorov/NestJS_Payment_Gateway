@@ -1,6 +1,6 @@
 import { Module, Logger } from '@nestjs/common';
 import { PaymentController } from './payment.controller';
-import { PaymentService } from './payment.service';
+import { ProcessingService } from './payment.service';
 import { PaymentProcessorFactoryImpl } from './factories/payment-processor.factory';
 
 // Import all payment processors
@@ -39,7 +39,7 @@ import { BraintreeMockService } from './mocks/braintree-mock.service';
   controllers: [PaymentController],
   providers: [
     // Core payment services
-    PaymentService,
+    ProcessingService,
     PaymentProcessorFactoryImpl,
     
     // Payment processors
@@ -58,7 +58,7 @@ import { BraintreeMockService } from './mocks/braintree-mock.service';
   ],
   exports: [
     // Export main services for potential use in other modules
-    PaymentService,
+    ProcessingService,
     PaymentProcessorFactoryImpl,
     
     // Export all processors in case other modules need direct access

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { PaymentRequest, PaymentResponse, BankId } from '@nestjs-payment-gateway/shared';
+import { PaymentRequest, PaymentResponse } from '@nestjs-payment-gateway/shared';
 
 @Injectable({
   providedIn: 'root'
@@ -12,9 +12,10 @@ export class PaymentService {
 
   /**
    * Process payment with specific bank
+   * Calls the backend charge endpoint
    */
   processPayment(request: PaymentRequest): Observable<PaymentResponse> {
-    return this.http.post<PaymentResponse>(`${this.baseUrl}/payments`, request);
+    return this.http.post<PaymentResponse>(`${this.baseUrl}/payments/charge`, request);
   }
 
   /**

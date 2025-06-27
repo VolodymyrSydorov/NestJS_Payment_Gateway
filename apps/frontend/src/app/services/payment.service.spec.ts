@@ -29,7 +29,7 @@ describe('PaymentService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should process payment with specific bank', () => {
+  it('should process payment with specific bank via charge endpoint', () => {
     const mockRequest: PaymentRequest = {
       amount: 100,
       currency: Currency.USD,
@@ -42,41 +42,45 @@ describe('PaymentService', () => {
       amount: 100,
       currency: Currency.USD,
       bankId: BankId.STRIPE,
-      timestamp: new Date()
+      timestamp: new Date(),
+      processingTimeMs: 250
     };
 
     service.processPayment(mockRequest).subscribe(response => {
       expect(response).toEqual(mockResponse);
     });
 
-    const req = httpMock.expectOne('http://localhost:3000/payments');
+    // Should call the charge endpoint
+    const req = httpMock.expectOne('http://localhost:3000/payments/charge');
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual(mockRequest);
     req.flush(mockResponse);
   });
 
-  it('should process payment with auto bank selection', () => {
-    const mockRequest = {
-      amount: 50,
-      currency: Currency.EUR
+  it('should handle different payment processors', () => {
+    const mockRequest: PaymentRequest = {
+      amount: 200,
+      currency: Currency.EUR,
+      bankId: BankId.PAYPAL
     };
 
     const mockResponse: PaymentResponse = {
-      transactionId: 'auto-456',
+      transactionId: 'paypal-456',
       status: PaymentStatus.SUCCESS,
-      amount: 50,
+      amount: 200,
       currency: Currency.EUR,
       bankId: BankId.PAYPAL,
-      timestamp: new Date()
+      timestamp: new Date(),
+      processingTimeMs: 300
     };
 
-    service.processPaymentAuto(mockRequest).subscribe(response => {
-      expect(response).toEqual(mockResponse);
+    service.processPayment(mockRequest).subscribe(response => {
+      expect(response.bankId).toEqual(BankId.PAYPAL);
+      expect(response.status).toEqual(PaymentStatus.SUCCESS);
     });
 
-    const req = httpMock.expectOne('http://localhost:3000/payments/auto');
+    const req = httpMock.expectOne('http://localhost:3000/payments/charge');
     expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual(mockRequest);
     req.flush(mockResponse);
   });
 }); 

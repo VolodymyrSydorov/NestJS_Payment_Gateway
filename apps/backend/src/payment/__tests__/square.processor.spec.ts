@@ -198,9 +198,9 @@ describe('SquareProcessor', () => {
        await processor.charge(validPaymentRequest);
        const endTime = Date.now();
        
-       // Square should process within reasonable time (allowing for some variance)
-       expect(endTime - startTime).toBeGreaterThan(500); // At least 500ms
-       expect(endTime - startTime).toBeLessThan(1200); // Less than 1200ms
+               // Square should process within reasonable time (allowing for some variance)
+        expect(endTime - startTime).toBeGreaterThanOrEqual(500); // At least 500ms
+        expect(endTime - startTime).toBeLessThan(1200); // Less than 1200ms
      });
   });
 

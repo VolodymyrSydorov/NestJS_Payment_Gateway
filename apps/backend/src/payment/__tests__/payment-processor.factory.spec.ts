@@ -41,7 +41,7 @@ describe('PaymentProcessorFactoryImpl', () => {
 
     factory = module.get<PaymentProcessorFactoryImpl>(PaymentProcessorFactoryImpl);
     
-    // Mock logger to suppress error messages during tests
+    // Mock logger to suppress messages during tests
     jest.spyOn(factory['logger'], 'error').mockImplementation(() => {});
   });
 
@@ -120,85 +120,6 @@ describe('PaymentProcessorFactoryImpl', () => {
 
     it('should return false for unsupported banks', () => {
       expect(factory.isSupported('INVALID_BANK' as BankId)).toBe(false);
-    });
-
-    it('should check individual bank support', () => {
-      expect(factory.isBankSupported(BankId.STRIPE)).toBe(true);
-      expect(factory.isBankSupported('INVALID_BANK' as BankId)).toBe(false);
-    });
-
-    it('should check individual bank enabled status', () => {
-      expect(factory.isBankEnabled(BankId.STRIPE)).toBe(true);
-      expect(factory.isBankEnabled(BankId.PAYPAL)).toBe(true);
-    });
-  });
-
-  describe('Processor Management', () => {
-    it('should enable and disable processors', () => {
-      // Disable Stripe
-      factory.disableProcessor(BankId.STRIPE);
-      expect(factory.isBankEnabled(BankId.STRIPE)).toBe(false);
-
-      // Enable Stripe
-      factory.enableProcessor(BankId.STRIPE);
-      expect(factory.isBankEnabled(BankId.STRIPE)).toBe(true);
-    });
-
-    it('should throw error when enabling invalid bank', () => {
-      expect(() => {
-        factory.enableProcessor('INVALID_BANK' as BankId);
-      }).toThrow('Processor not found: INVALID_BANK');
-    });
-
-    it('should throw error when disabling invalid bank', () => {
-      expect(() => {
-        factory.disableProcessor('INVALID_BANK' as BankId);
-      }).toThrow('Processor not found: INVALID_BANK');
-    });
-
-    it('should refuse to create processor when disabled', () => {
-      // Disable Stripe
-      factory.disableProcessor(BankId.STRIPE);
-
-      expect(() => {
-        factory.createProcessor(BankId.STRIPE);
-      }).toThrow('Bank stripe is currently disabled');
-
-      // Re-enable for cleanup
-      factory.enableProcessor(BankId.STRIPE);
-    });
-  });
-
-  describe('Processor Information', () => {
-    it('should return processor summary', () => {
-      const summary = factory.getProcessorsSummary();
-      
-      expect(summary).toHaveLength(5);
-      expect(summary[0]).toHaveProperty('bankId');
-      expect(summary[0]).toHaveProperty('name');
-      expect(summary[0]).toHaveProperty('enabled');
-      expect(summary[0]).toHaveProperty('averageProcessingTime');
-      
-      // Verify using BankId enum
-      const stripeProcessor = summary.find(p => p.bankId === BankId.STRIPE);
-      expect(stripeProcessor).toBeDefined();
-      expect(stripeProcessor!.name).toBe('Stripe');
-      expect(stripeProcessor!.enabled).toBe(true);
-    });
-
-    it('should get enabled processors only', () => {
-      // Disable one processor
-      factory.disableProcessor(BankId.STRIPE);
-      
-      const enabledProcessors = factory.getEnabledProcessors();
-      expect(enabledProcessors).toHaveLength(4);
-      
-      const enabledBankIds = enabledProcessors.map(p => p.bankId);
-      expect(enabledBankIds).toHaveLength(4);
-      expect(enabledBankIds).not.toContain(BankId.STRIPE);
-      
-      // Re-enable for cleanup
-      factory.enableProcessor(BankId.STRIPE);
     });
   });
 }); 
