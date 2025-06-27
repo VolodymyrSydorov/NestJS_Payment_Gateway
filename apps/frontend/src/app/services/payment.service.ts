@@ -17,18 +17,4 @@ export class PaymentService {
   processPayment(request: PaymentRequest): Observable<PaymentResponse> {
     return this.http.post<PaymentResponse>(`${this.baseUrl}/payments/charge`, request);
   }
-
-  /**
-   * Process payment with automatic bank selection
-   */
-  processPaymentAuto(request: Omit<PaymentRequest, 'bankId'>): Observable<PaymentResponse> {
-    return this.http.post<PaymentResponse>(`${this.baseUrl}/payments/auto`, request);
-  }
-
-  /**
-   * Get health status of all payment processors
-   */
-  getHealthStatus(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/payments/health`);
-  }
 } 
