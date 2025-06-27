@@ -1,4 +1,5 @@
 import { Component, signal, computed, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -8,7 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { BankId, Currency } from '../../../../../shared';
+import { BankId, Currency, CURRENCY_SYMBOLS } from '@shared';
 import { PaymentService } from '../services/payment.service';
 
 @Component({
@@ -24,140 +25,33 @@ import { PaymentService } from '../services/payment.service';
     MatButtonModule,
     MatProgressSpinnerModule
   ],
-  template: `
-    <mat-card class="payment-form-card">
-      <mat-card-header>
-        <mat-card-title>Payment Gateway</mat-card-title>
-        <mat-card-subtitle>Process payment through multiple banks</mat-card-subtitle>
-      </mat-card-header>
-      
-      <mat-card-content>
-        <form class="payment-form">
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Amount</mat-label>
-            <input 
-              matInput 
-              type="number" 
-              [ngModel]="formData().amount"
-              (ngModelChange)="updateAmount($event)"
-              name="amount"
-              placeholder="0.00"
-              min="0.01"
-              step="0.01"
-              [disabled]="loading()">
-            <span matTextPrefix>$&nbsp;</span>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Currency</mat-label>
-            <mat-select [ngModel]="formData().currency" (ngModelChange)="updateCurrency($event)" name="currency" [disabled]="loading()">
-              <mat-option value="USD">USD - US Dollar</mat-option>
-              <mat-option value="EUR">EUR - Euro</mat-option>
-              <mat-option value="GBP">GBP - British Pound</mat-option>
-              <mat-option value="UAH">UAH - Ukrainian Hryvnia</mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Payment Processor</mat-label>
-            <mat-select [ngModel]="formData().selectedBank" (ngModelChange)="updateBank($event)" name="bank" [disabled]="loading()">
-              <mat-option [value]="BankId.STRIPE">Stripe (REST API)</mat-option>
-              <mat-option [value]="BankId.PAYPAL">PayPal (SOAP)</mat-option>
-              <mat-option [value]="BankId.SQUARE">Square (Custom)</mat-option>
-              <mat-option [value]="BankId.ADYEN">Adyen (HMAC)</mat-option>
-              <mat-option [value]="BankId.BRAINTREE">Braintree (GraphQL)</mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <button 
-            mat-raised-button 
-            color="primary" 
-            class="submit-button"
-            [disabled]="!isFormValid() || loading()"
-            (click)="onSubmit()">
-            @if (loading()) {
-              <mat-spinner diameter="20" color="accent"></mat-spinner>
-              Processing...
-            } @else {
-              Process Payment
-            }
-          </button>
-        </form>
-
-        @if (result()) {
-          <div class="result-card" [class.success]="result()?.status === 'success'" [class.error]="result()?.status !== 'success'">
-            <h3>Payment Result</h3>
-            <p><strong>Status:</strong> {{ result()?.status }}</p>
-            <p><strong>Transaction ID:</strong> {{ result()?.transactionId }}</p>
-            <p><strong>Amount:</strong> {{ amountDisplay() }}</p>
-            <p><strong>Processor:</strong> {{ result()?.bankId }}</p>
-          </div>
-        }
-      </mat-card-content>
-    </mat-card>
-  `,
-  styles: [`
-    .payment-form-card {
-      max-width: 500px;
-      margin: 20px auto;
-    }
-    
-    .payment-form {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    
-    .full-width {
-      width: 100%;
-    }
-    
-    .submit-button {
-      margin-top: 16px;
-      height: 48px;
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-
-    .result-card {
-      margin-top: 24px;
-      padding: 16px;
-      border-radius: 8px;
-      border: 2px solid;
-    }
-
-    .result-card.success {
-      border-color: #4caf50;
-      background-color: #e8f5e8;
-      color: #2e7d32;
-    }
-
-    .result-card.error {
-      border-color: #f44336;
-      background-color: #ffeaea;
-      color: #c62828;
-    }
-
-    .result-card h3 {
-      margin: 0 0 12px 0;
-      font-size: 18px;
-    }
-
-    .result-card p {
-      margin: 4px 0;
-    }
-  `]
+  templateUrl: './payment-form.component.html',
+  styleUrls: ['./payment-form.component.scss']
 })
 export class PaymentFormComponent {
   private paymentService = inject(PaymentService);
   private snackBar = inject(MatSnackBar);
+  private takeUntilDestroyed = takeUntilDestroyed();
 
   // Expose enums to template
   readonly BankId = BankId;
   readonly Currency = Currency;
+
+  // Arrays for ngFor iterations
+  readonly currencies = [
+    { value: Currency.USD, label: 'USD - US Dollar' },
+    { value: Currency.EUR, label: 'EUR - Euro' },
+    { value: Currency.GBP, label: 'GBP - British Pound' },
+    { value: Currency.UAH, label: 'UAH - Ukrainian Hryvnia' }
+  ];
+
+  readonly paymentProcessors = [
+    { value: BankId.STRIPE, label: 'Stripe (REST API)' },
+    { value: BankId.PAYPAL, label: 'PayPal (SOAP)' },
+    { value: BankId.SQUARE, label: 'Square (Custom)' },
+    { value: BankId.ADYEN, label: 'Adyen (HMAC)' },
+    { value: BankId.BRAINTREE, label: 'Braintree (GraphQL)' }
+  ];
 
   // All form data as signals
   formData = signal({
@@ -166,61 +60,68 @@ export class PaymentFormComponent {
     selectedBank: BankId.STRIPE
   });
   
-  loading = signal<boolean>(false);
-  result = signal<any>(null);
+  isLoading = signal<boolean>(false);
+  paymentResult = signal<any>(null);
   
   // Computed signals (no template function calls!)
   isFormValid = computed(() => {
-    const data = this.formData();
-    return data.amount > 0 && data.selectedBank !== null;
+    const formData = this.formData();
+    return formData.amount > 0 && formData.selectedBank !== null;
   });
 
   amountDisplay = computed(() => {
-    const data = this.formData();
-    return `$${data.amount} ${data.currency}`;
+    const formData = this.formData();
+    return `${this.getCurrencySymbol(formData.currency)}${formData.amount} ${formData.currency}`;
   });
+
+  // Helper method for currency symbols
+  getCurrencySymbol(currency: Currency): string {
+    return CURRENCY_SYMBOLS[currency];
+  }
 
   // Signal update methods
   updateAmount(amount: number) {
-    this.formData.update(data => ({ ...data, amount }));
+    this.formData.update(formData => ({ ...formData, amount }));
   }
 
   updateCurrency(currency: Currency) {
-    this.formData.update(data => ({ ...data, currency }));
+    this.formData.update(formData => ({ ...formData, currency }));
   }
 
   updateBank(selectedBank: BankId) {
-    this.formData.update(data => ({ ...data, selectedBank }));
+    this.formData.update(formData => ({ ...formData, selectedBank }));
   }
   
   onSubmit() {
-    if (!this.isFormValid() || this.loading()) return;
+    if (!this.isFormValid() || this.isLoading()) return;
 
-    this.loading.set(true);
-    this.result.set(null);
+    this.isLoading.set(true);
+    this.paymentResult.set(null);
 
-    const data = this.formData();
+    const formData = this.formData();
     const paymentRequest = {
-      amount: data.amount * 100,
-      currency: data.currency,
-      bankId: data.selectedBank
+      amount: formData.amount * 100,
+      currency: formData.currency,
+      bankId: formData.selectedBank
     };
 
-    this.paymentService.processPayment(paymentRequest).subscribe({
-      next: (response) => {
-        this.loading.set(false);
-        this.result.set(response);
-        this.snackBar.open('Payment processed successfully!', 'Close', {
-          duration: 3000
-        });
-      },
-      error: (error) => {
-        this.loading.set(false);
-        console.error('Payment error:', error);
-        this.snackBar.open('Payment failed. Please try again.', 'Close', {
-          duration: 5000
-        });
-      }
-    });
+    this.paymentService.processPayment(paymentRequest)
+      .pipe(this.takeUntilDestroyed)
+      .subscribe({
+        next: (response) => {
+          this.isLoading.set(false);
+          this.paymentResult.set(response);
+          this.snackBar.open('Payment processed successfully!', 'Close', {
+            duration: 3000
+          });
+        },
+        error: (error) => {
+          this.isLoading.set(false);
+          console.error('Payment error:', error);
+          this.snackBar.open('Payment failed. Please try again.', 'Close', {
+            duration: 5000
+          });
+        }
+      });
   }
 } 

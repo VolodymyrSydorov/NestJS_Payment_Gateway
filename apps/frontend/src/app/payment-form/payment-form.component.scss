@@ -1,0 +1,62 @@
+.payment-form-card {
+  max-width: 500px;
+  margin: 20px auto;
+
+  mat-card-subtitle {
+    margin-bottom: 16px;
+    font-weight: normal;
+  }
+}
+
+.payment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.submit-button {
+  margin-top: 16px;
+  height: 48px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.result-card {
+  margin-top: 24px;
+  padding: 16px;
+  border-radius: 8px;
+  border: 2px solid;
+
+  &.success {
+    border-color: #4caf50;
+    background-color: #e8f5e8;
+    color: #2e7d32;
+  }
+
+  &.error {
+    border-color: #f44336;
+    background-color: #ffeaea;
+    color: #c62828;
+  }
+
+  h3 {
+    margin: 0 0 12px 0;
+    font-size: 18px;
+  }
+
+  p {
+    margin: 4px 0;
+
+    .label {
+      font-weight: bold;
+      color: inherit;
+    }
+  }
+} 
