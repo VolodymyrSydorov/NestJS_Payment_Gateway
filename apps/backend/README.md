@@ -13,6 +13,7 @@ npm install
 
 # Start development server (Port 3000)
 npm run start:dev
+# OR from root: npm run dev:backend
 
 # Production build & start
 npm run build

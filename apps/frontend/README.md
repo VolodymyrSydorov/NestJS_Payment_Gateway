@@ -13,6 +13,7 @@ npm install
 
 # Start development server (Port 4200)
 npm start
+# OR from root: npm run dev:frontend
 
 # Production build
 npm run build

@@ -21,13 +21,16 @@ A full-stack payment gateway application built with NestJS backend and Angular f
 # Build shared package first
 cd shared && npm run build
 
-# Terminal 1 - Backend (Port 3000)
-cd apps/backend
-npm run start:dev
+# Option 1: From root (recommended)
+npm run dev:backend     # Terminal 1 - Backend (Port 3000)
+npm run dev:frontend    # Terminal 2 - Frontend (Port 4200)
 
-# Terminal 2 - Frontend (Port 4200)  
-cd apps/frontend
-npm start
+# Option 2: From individual directories
+cd apps/backend && npm run start:dev    # Backend
+cd apps/frontend && npm start           # Frontend
+
+# Option 3: Both at once
+npm run dev            # Starts both backend and frontend
 ```
 
 **Open**: http://localhost:4200
