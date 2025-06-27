@@ -33,10 +33,10 @@ describe('BraintreeProcessor', () => {
       
       expect(info.name).toBe('Braintree');
       expect(info.type).toBe('card_payment');
-      expect(info.api_type).toBe('GraphQL');
-      expect(info.features).toContain('graphql_mutations');
-      expect(info.features).toContain('advanced_fraud_detection');
-      expect(info.features).toContain('paypal_integration');
+      expect(info.protocol).toBe('GraphQL');
+      expect(info.features).toContain('card_processing');
+      expect(info.features).toContain('fraud_detection');
+      expect(info.features).toContain('recurring_payments');
       expect(info.average_processing_time_ms).toBe(400);
     });
   });

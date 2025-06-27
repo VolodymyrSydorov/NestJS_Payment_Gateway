@@ -189,7 +189,7 @@ export class PaymentController {
    * PUT /payments/processors/:bankId/enable
    */
   @Put('processors/:bankId/enable')
-  async enableProcessor(@Param('bankId') bankId: string) {
+  enableProcessor(@Param('bankId') bankId: string) {
     this.logger.log(`Enabling processor: ${bankId}`);
     
     try {
@@ -205,7 +205,7 @@ export class PaymentController {
         );
       }
 
-      await this.paymentService.enableProcessor(bankId as BankId);
+      this.paymentService.enableProcessor(bankId as BankId);
       
       this.logger.log(`Successfully enabled processor: ${bankId}`);
       return {
@@ -232,7 +232,7 @@ export class PaymentController {
    * PUT /payments/processors/:bankId/disable
    */
   @Put('processors/:bankId/disable')
-  async disableProcessor(@Param('bankId') bankId: string) {
+  disableProcessor(@Param('bankId') bankId: string) {
     this.logger.log(`Disabling processor: ${bankId}`);
     
     try {
@@ -248,7 +248,7 @@ export class PaymentController {
         );
       }
 
-      await this.paymentService.disableProcessor(bankId as BankId);
+      this.paymentService.disableProcessor(bankId as BankId);
       
       this.logger.log(`Successfully disabled processor: ${bankId}`);
       return {

@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PaymentRequest, PaymentResponse, PaymentStatus, BankId, BankConfig } from '@nestjs-payment-gateway/shared';
+import { PaymentRequest, PaymentResponse, PaymentStatus, BankId, BankConfig, Currency } from '@nestjs-payment-gateway/shared';
 import { BasePaymentProcessor } from './base-payment.processor';
 import { SquareMockService, SquarePaymentResponse } from '../mocks/square-mock.service';
+import { ProcessorInfo, ProcessorFeature } from '../../interfaces/processor-types';
+import { MOCK_API_KEYS, MOCK_TEST_DATA } from '../../config/mocks';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -25,7 +27,7 @@ export class SquareProcessor extends BasePaymentProcessor {
     super(BankId.SQUARE, {
       bankId: BankId.SQUARE,
       apiUrl: 'https://connect.squareupsandbox.com',
-      apiKey: 'sandbox-sq0idp-mock_access_token',
+      apiKey: MOCK_API_KEYS.square,
       enabled: true,
       timeoutMs: 30000
     });
@@ -203,22 +205,18 @@ export class SquareProcessor extends BasePaymentProcessor {
   /**
    * Get processor configuration
    */
-  getProcessorInfo() {
+  getProcessorInfo(): ProcessorInfo {
     return {
       name: this.processorName,
       type: 'card_payment',
       features: [
-        'idempotency_protection',
-        'custom_headers',
-        'location_based_processing',
-        'risk_evaluation',
-        'processing_fees',
-        'receipt_generation',
-        'cvv_verification',
-        'avs_verification'
+        'card_processing',
+        'fraud_detection',
+        'tokenization'
       ],
-      supported_currencies: ['USD', 'CAD', 'GBP', 'EUR', 'AUD', 'JPY'],
-      average_processing_time_ms: this.averageProcessingTime
+      supported_currencies: [Currency.USD, Currency.CAD, Currency.GBP, Currency.EUR, Currency.AUD, Currency.JPY],
+      average_processing_time_ms: this.averageProcessingTime,
+      protocol: 'Custom'
     };
   }
 } 

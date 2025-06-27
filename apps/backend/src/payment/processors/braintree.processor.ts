@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PaymentRequest, PaymentResponse, PaymentStatus, BankId, BankConfig } from '@nestjs-payment-gateway/shared';
+import { PaymentRequest, PaymentResponse, PaymentStatus, BankId, BankConfig, Currency } from '@nestjs-payment-gateway/shared';
 import { BasePaymentProcessor } from './base-payment.processor';
 import { BraintreeMockService, BraintreeGraphQLResponse } from '../mocks/braintree-mock.service';
+import { MOCK_API_KEYS, MOCK_TEST_DATA, MOCK_URLS } from '../../config/mocks';
 
 /**
  * Braintree Payment Processor
@@ -25,7 +26,7 @@ export class BraintreeProcessor extends BasePaymentProcessor {
     super(BankId.BRAINTREE, {
       bankId: BankId.BRAINTREE,
       apiUrl: 'https://payments.sandbox.braintree-api.com/graphql',
-      apiKey: 'test_braintree_api_key_mock',
+      apiKey: MOCK_API_KEYS.braintree,
       enabled: true,
       timeoutMs: 30000
     });
@@ -260,50 +261,11 @@ export class BraintreeProcessor extends BasePaymentProcessor {
   getProcessorInfo() {
     return {
       name: this.processorName,
-      type: 'card_payment',
-      api_type: 'GraphQL',
-      features: [
-        'graphql_mutations',
-        'advanced_fraud_detection',
-        'paypal_integration',
-        'recurring_payments',
-        'risk_scoring',
-        'comprehensive_reporting',
-        'multi_payment_methods',
-        'sandbox_testing',
-        'dollar_based_pricing',
-        'transaction_status_tracking'
-      ],
-      supported_currencies: [
-        'USD', 'EUR', 'GBP', 'AUD', 'CAD', 'JPY', 'CHF', 'SEK', 'NOK', 'DKK',
-        'PLN', 'CZK', 'HUF', 'BRL', 'MXN', 'HKD', 'SGD', 'NZD', 'ILS', 'THB'
-      ],
-      supported_payment_methods: [
-        'credit_cards',
-        'paypal',
-        'venmo',
-        'apple_pay',
-        'google_pay',
-        'samsung_pay',
-        'local_payment_methods'
-      ],
-      security_features: [
-        'Advanced_Fraud_Detection',
-        'Risk_Scoring',
-        'Device_Fingerprinting',
-        'Vault_Tokenization',
-        '3D_Secure',
-        'PCI_DSS_Level_1'
-      ],
-      graphql_features: [
-        'mutations',
-        'queries',
-        'subscriptions',
-        'real_time_updates',
-        'batch_operations',
-        'introspection'
-      ],
-      average_processing_time_ms: this.averageProcessingTime
+      type: 'card_payment' as const,
+      features: ['card_processing', 'fraud_detection', 'recurring_payments'] as any,
+      supported_currencies: [Currency.USD, Currency.EUR, Currency.GBP, Currency.AUD, Currency.CAD, Currency.JPY],
+      average_processing_time_ms: this.averageProcessingTime,
+      protocol: 'GraphQL' as const
     };
   }
 } 

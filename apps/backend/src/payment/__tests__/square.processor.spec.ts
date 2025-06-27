@@ -33,10 +33,9 @@ describe('SquareProcessor', () => {
       
       expect(info.name).toBe('Square');
       expect(info.type).toBe('card_payment');
-      expect(info.features).toContain('idempotency_protection');
-      expect(info.features).toContain('custom_headers');
-      expect(info.features).toContain('location_based_processing');
-      expect(info.features).toContain('risk_evaluation');
+      expect(info.features).toContain('card_processing');
+      expect(info.features).toContain('fraud_detection');
+      expect(info.features).toContain('tokenization');
       expect(info.supported_currencies).toContain('USD');
       expect(info.average_processing_time_ms).toBe(800);
     });

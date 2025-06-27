@@ -15,8 +15,22 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+    it('should return API information', () => {
+      const result = appController.getApiInfo();
+      expect(result).toHaveProperty('name', 'NestJS Payment Gateway API');
+      expect(result).toHaveProperty('version', '1.0.0');
+      expect(result).toHaveProperty('supportedProcessors');
+      expect(result.supportedProcessors).toHaveLength(5);
+    });
+  });
+
+  describe('health', () => {
+    it('should return health status', () => {
+      const result = appController.getHealth();
+      expect(result).toHaveProperty('status', 'ok');
+      expect(result).toHaveProperty('timestamp');
+      expect(result).toHaveProperty('uptime');
+      expect(result).toHaveProperty('service', 'payment-gateway-api');
     });
   });
 });

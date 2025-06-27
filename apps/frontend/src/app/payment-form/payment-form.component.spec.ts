@@ -32,9 +32,9 @@ describe('PaymentFormComponent', () => {
   });
 
   describe('Component Initialization', () => {
-    it('should create', () => {
-      expect(component).toBeTruthy();
-    });
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
 
     it('should initialize with default values', () => {
       const formData = component.formData();

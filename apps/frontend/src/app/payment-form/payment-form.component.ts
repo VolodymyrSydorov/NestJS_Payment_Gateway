@@ -66,7 +66,9 @@ export class PaymentFormComponent {
     { value: Currency.USD, label: 'USD - US Dollar' },
     { value: Currency.EUR, label: 'EUR - Euro' },
     { value: Currency.GBP, label: 'GBP - British Pound' },
-    { value: Currency.UAH, label: 'UAH - Ukrainian Hryvnia' }
+    { value: Currency.JPY, label: 'JPY - Japanese Yen' },
+    { value: Currency.AUD, label: 'AUD - Australian Dollar' },
+    { value: Currency.CAD, label: 'CAD - Canadian Dollar' }
   ];
 
   readonly paymentProcessors = [

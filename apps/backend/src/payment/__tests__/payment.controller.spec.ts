@@ -276,7 +276,7 @@ describe('PaymentController', () => {
 
   describe('Multiple Currencies', () => {
     it('should handle different currencies', async () => {
-      const currencies = [Currency.USD, Currency.EUR, Currency.GBP, Currency.UAH];
+      const currencies = [Currency.USD, Currency.EUR, Currency.GBP, Currency.JPY, Currency.AUD, Currency.CAD];
 
       for (const currency of currencies) {
         const paymentRequest: PaymentRequest = {

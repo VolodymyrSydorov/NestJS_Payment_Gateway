@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Logger } from '@nestjs/common';
 import { PaymentController } from './payment.controller';
 import { PaymentService } from './payment.service';
 import { PaymentProcessorFactoryImpl } from './factories/payment-processor.factory';
@@ -70,9 +70,11 @@ import { BraintreeMockService } from './mocks/braintree-mock.service';
   ],
 })
 export class PaymentModule {
+  private readonly logger = new Logger(PaymentModule.name);
+
   constructor() {
-    console.log('🚀 Payment Module initialized with 5 processors');
-    console.log('📋 Supported protocols: REST JSON, SOAP XML, Custom Headers, HMAC Auth, GraphQL');
-    console.log('🏦 Supported banks: Stripe, PayPal, Square, Adyen, Braintree');
+    this.logger.log('🚀 Payment Module initialized with 5 processors');
+    this.logger.log('📋 Supported protocols: REST JSON, SOAP XML, Custom Headers, HMAC Auth, GraphQL');
+    this.logger.log('🏦 Supported banks: Stripe, PayPal, Square, Adyen, Braintree');
   }
 } 

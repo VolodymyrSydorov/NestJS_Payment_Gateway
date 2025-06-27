@@ -1,7 +1,8 @@
 import { Injectable, Logger, BadRequestException, ServiceUnavailableException } from '@nestjs/common';
-import { PaymentRequest, PaymentResponse, PaymentStatus, BankId, validatePaymentRequest } from '@nestjs-payment-gateway/shared';
+import { PaymentRequest, PaymentResponse, PaymentStatus, BankId, Currency, validatePaymentRequest } from '@nestjs-payment-gateway/shared';
 import { PaymentProcessorFactoryImpl } from './factories/payment-processor.factory';
 import { v4 as uuidv4 } from 'uuid';
+import { ProcessorInfo, ProcessorError } from '../interfaces/processor-types';
 
 /**
  * Payment Service
@@ -201,7 +202,7 @@ export class PaymentService {
   /**
    * Enable a specific payment processor
    */
-  async enableProcessor(bankId: BankId): Promise<void> {
+  enableProcessor(bankId: BankId): void {
     this.logger.log(`Enabling processor: ${bankId}`);
     this.processorFactory.enableProcessor(bankId);
   }
@@ -209,7 +210,7 @@ export class PaymentService {
   /**
    * Disable a specific payment processor
    */
-  async disableProcessor(bankId: BankId): Promise<void> {
+  disableProcessor(bankId: BankId): void {
     this.logger.log(`Disabling processor: ${bankId}`);
     this.processorFactory.disableProcessor(bankId);
   }
@@ -224,7 +225,7 @@ export class PaymentService {
   /**
    * Get processor information for a specific bank
    */
-  getProcessorInfo(bankId: BankId): any {
+  getProcessorInfo(bankId: BankId): ProcessorInfo {
     const processor = this.processorFactory.createProcessor(bankId);
     return processor.getProcessorInfo();
   }
@@ -287,7 +288,7 @@ export class PaymentService {
         // Create a minimal test payment request
         const testPayment: PaymentRequest = {
           amount: 100, // $1.00
-          currency: 'USD' as any,
+          currency: Currency.USD,
           bankId: processor.bankId,
           description: 'Connectivity test',
           referenceId: `test_${Date.now()}`

@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PaymentRequest, PaymentResponse, PaymentStatus, BankId, BankConfig } from '@nestjs-payment-gateway/shared';
+import { PaymentRequest, PaymentResponse, PaymentStatus, BankId, BankConfig, Currency } from '@nestjs-payment-gateway/shared';
 import { BasePaymentProcessor } from './base-payment.processor';
 import { AdyenMockService, AdyenPaymentResponse } from '../mocks/adyen-mock.service';
+import { MOCK_API_KEYS, MOCK_TEST_DATA, MOCK_URLS } from '../../config/mocks';
 
 /**
  * Adyen Payment Processor
@@ -25,7 +26,7 @@ export class AdyenProcessor extends BasePaymentProcessor {
     super(BankId.ADYEN, {
       bankId: BankId.ADYEN,
       apiUrl: 'https://checkout-test.adyen.com/v71/payments',
-      apiKey: 'AQE1hmfuXNWTK0Qc+iSS3VlbmY1mFGfXV2RKzeVL-mock-api-key',
+      apiKey: MOCK_API_KEYS.adyen,
       enabled: true,
       timeoutMs: 30000
     });
@@ -205,34 +206,11 @@ export class AdyenProcessor extends BasePaymentProcessor {
   getProcessorInfo() {
     return {
       name: this.processorName,
-      type: 'card_payment',
-      features: [
-        'hmac_authentication',
-        'encrypted_card_data',
-        'fraud_scoring',
-        'global_processing',
-        'local_acquiring',
-        '3ds2_support',
-        'comprehensive_reporting',
-        'real_time_notifications',
-        'multi_currency',
-        'risk_management'
-      ],
-      supported_currencies: [
-        'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'SEK', 'NOK', 'DKK',
-        'PLN', 'CZK', 'HUF', 'RON', 'BGN', 'HRK', 'RSD', 'BAM', 'MKD', 'ALL',
-        'TRY', 'RUB', 'UAH', 'BYN', 'KZT', 'UZS', 'GEL', 'AMD', 'AZN', 'MDL'
-      ],
-      security_features: [
-        'PCI_DSS_Level_1',
-        'HMAC_SHA256_Authentication',
-        'Client_Side_Encryption',
-        'Tokenization',
-        'Fraud_Detection',
-        '3D_Secure_2',
-        'Network_Tokenization'
-      ],
-      average_processing_time_ms: this.averageProcessingTime
+      type: 'card_payment' as const,
+      features: ['card_processing', 'fraud_detection', '3ds_support'] as any,
+      supported_currencies: [Currency.USD, Currency.EUR, Currency.GBP, Currency.JPY, Currency.AUD, Currency.CAD],
+      average_processing_time_ms: this.averageProcessingTime,
+      protocol: 'REST' as const
     };
   }
 } 

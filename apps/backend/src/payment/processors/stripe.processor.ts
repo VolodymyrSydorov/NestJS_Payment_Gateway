@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { PaymentRequest, PaymentResponse, BankId, BANK_DISPLAY_NAMES } from '@nestjs-payment-gateway/shared';
 import { BasePaymentProcessor } from './base-payment.processor';
 import { StripeMockService, StripeChargeResponse } from '../mocks/stripe-mock.service';
+import { getTimeout } from '../../config/processor-config';
+import { MOCK_URLS, MOCK_API_KEYS } from '../../config/mocks';
 
 /**
  * Stripe Payment Processor
@@ -13,10 +15,10 @@ export class StripeProcessor extends BasePaymentProcessor {
   constructor(private stripeMockService: StripeMockService) {
     super(BankId.STRIPE, {
       bankId: BankId.STRIPE,
-      apiUrl: 'https://api.stripe.com/v1',
-      apiKey: 'sk_test_mock_key',
+      apiUrl: MOCK_URLS.stripe,
+      apiKey: MOCK_API_KEYS.stripe,
       enabled: true,
-      timeoutMs: 5000
+      timeoutMs: getTimeout(BankId.STRIPE)
     });
   }
 
